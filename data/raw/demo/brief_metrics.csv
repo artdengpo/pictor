@@ -1,0 +1,6 @@
+metric,base_year,plan_without_change,plan_target,unit
+gross_profit,282,279,285,million_rub
+active_family_groups_last_month,5000,5000,8000,groups
+connected_family_groups_end_year,7500,8000,12000,groups
+connected_multi_number_owners_end_year,1000,1000,2000,owners
+14_day_activation_rate,0.50,0.45,0.60,ratio

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "BRIEF-PDF",
+      "kind": "document",
+      "locator": "projects/demo/Пример брифа.pdf",
+      "accessed_at": "2026-11-20",
+      "title": "Пример брифа на разработку стратегии",
+      "notes": "Учебный бриф заказчика; запрещено считать числа реальными данными МегаФона."
+    },
+    {
+      "id": "BRIEF-TEXT",
+      "kind": "document",
+      "locator": "projects/demo/brief_megafon_style.md",
+      "accessed_at": "2026-11-20",
+      "title": "Структурированный бриф",
+      "notes": "Распакованное представление условий PDF-брифа."
+    },
+    {
+      "id": "DEMO-METRICS",
+      "kind": "table",
+      "locator": "data/raw/demo/brief_metrics.csv",
+      "accessed_at": "2026-11-20",
+      "title": "Учебные показатели",
+      "notes": "Синтетические значения из присланного брифа."
+    },
+    {
+      "id": "DEMO-CASES",
+      "kind": "document",
+      "locator": "data/raw/demo/connection_cases.md",
+      "accessed_at": "2026-11-20",
+      "title": "Синтетические сценарии помощи",
+      "notes": "Вымышленные сценарии, не реальные интервью."
+    }
+  ]
+}

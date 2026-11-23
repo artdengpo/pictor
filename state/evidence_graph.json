@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "BRIEF-PDF",
+      "kind": "document",
+      "locator": "projects/demo/Пример брифа.pdf",
+      "accessed_at": "2026-11-20",
+      "title": "Пример брифа",
+      "notes": "Учебный бриф прислан заказчиком; все данные учебные."
+    },
+    {
+      "id": "BRIEF-TEXT",
+      "kind": "document",
+      "locator": "projects/demo/brief_megafon_style.md",
+      "accessed_at": "2026-11-20",
+      "title": "Структурированный бриф по PDF",
+      "notes": "Краткое структурированное представление требований PDF."
+    },
+    {
+      "id": "DEMO-METRICS",
+      "kind": "table",
+      "locator": "data/raw/demo/brief_metrics.csv",
+      "accessed_at": "2026-11-20",
+      "title": "Учебные показатели планового года",
+      "notes": "Синтетические значения из присланного брифа."
+    },
+    {
+      "id": "DEMO-CASES",
+      "kind": "document",
+      "locator": "data/raw/demo/connection_cases.md",
+      "accessed_at": "2026-11-20",
+      "title": "Синтетические сценарии помощи со связью",
+      "notes": "Вымышленные сценарии, не реальные интервью."
+    },
+    {
+      "id": "ECON-ASSUMPTION",
+      "kind": "document",
+      "locator": "projects/demo/brief_megafon_style.md",
+      "accessed_at": "2026-11-20",
+      "title": "Учебная экономическая граница",
+      "notes": "500 руб. за дополнительный оплаченный месяц как учебная ставка."
+    }
+  ],
+  "claims": [
+    {"id":"BRIEF-FACT-01","text":"В обычном плане валовая прибыль 279 млн руб.; цель — 285 млн руб.; разрыв — 6 млн руб.","type":"fact","confidence":"high","source_ids":["BRIEF-PDF","BRIEF-TEXT","DEMO-METRICS"],"exact_location":"PDF раздел «Рынок и исходные показатели» и раздел «Как рассчитать прибыль»"},
+    {"id":"BRIEF-FACT-02","text":"Целевые показатели: 12 000 подключённых и 8 000 активных семейных групп.","type":"fact","confidence":"high","source_ids":["BRIEF-PDF","DEMO-METRICS"],"exact_location":"PDF таблица исходных показателей и раздел о активности"},
+    {"id":"BRIEF-FACT-03","text":"Частоты причин и реальные истории клиентов в задании не содержатся.","type":"fact","confidence":"high","source_ids":["BRIEF-PDF","DEMO-CASES"],"exact_location":"PDF раздел «Клиент и его проблема»"},
+    {"id":"BRIEF-FACT-04","text":"Учебный порог пользы — снижение доли ограничений интернета с 12% до 9% за 7 дней.","type":"fact","confidence":"high","source_ids":["BRIEF-PDF","BRIEF-TEXT"],"exact_location":"PDF раздел «Польза для клиента и прибыль оператора»"},
+    {"id":"BRIEF-HYP-01","text":"Помощь семейной группе может уменьшить потерю интернета и изменить полезное действие.","type":"hypothesis","confidence":"medium","source_ids":["BRIEF-PDF","DEMO-CASES"],"exact_location":"Проблема общего пакета и семейная пользовательская ситуация"},
+    {"id":"BRIEF-HYP-02","text":"Простое предупреждение со ссылкой может дать близкую пользу к более дорогому кабинету.","type":"hypothesis","confidence":"medium","source_ids":["BRIEF-PDF"],"exact_location":"PDF раздел «Предложение и путь к клиенту»"},
+    {"id":"BRIEF-HYP-03","text":"Пилот должен требовать совместимый тариф, разрешение и достаточный остаток.","type":"hypothesis","confidence":"medium","source_ids":["BRIEF-PDF","DEMO-CASES"],"exact_location":"PDF раздел «Как провести пробный запуск»"},
+    {"id":"BRIEF-HYP-04","text":"Оставить текущее обслуживание оправдано до подтверждения потока подходящих случаев.","type":"hypothesis","confidence":"high","source_ids":["BRIEF-PDF","DEMO-METRICS"],"exact_location":"PDF таблица «Без изменений»"},
+    {"id":"BRIEF-HYP-05","text":"Закрывать направление преждевременно без подтверждённой отрицательной экономики и спроса.","type":"hypothesis","confidence":"medium","source_ids":["BRIEF-PDF","ECON-ASSUMPTION"],"exact_location":"PDF раздел «Стратегический выбор»"},
+    {"id":"CASE-FACT-01","text":"Для общей передачи нужны совместимость тарифа, разрешение и свободный остаток; после операции нужен подтверждённый статус.","type":"fact","confidence":"high","source_ids":["DEMO-CASES","BRIEF-PDF"],"exact_location":"Синтетический сценарий семейной группы"},
+    {"id":"CASE-FACT-02","text":"Для собственных номеров необходимо различать счёт и состояние роутера; повторные платежи и доступ запрещены при споре.","type":"fact","confidence":"high","source_ids":["DEMO-CASES","BRIEF-PDF"],"exact_location":"Синтетический сценарий собственного номера и раздел рисков"},
+    {"id":"ECON-FACT-01","text":"При 500 руб. валовой прибыли за месяц для 6 млн руб. нужны 12 000 дополнительных оплаченных месяцев.","type":"fact","confidence":"high","source_ids":["BRIEF-PDF","ECON-ASSUMPTION"],"exact_location":"PDF раздел «Проверить границу решения»"},
+    {"id":"ECON-HYP-01","text":"Новые прямые расходы увеличивают число оплаченных месяцев, необходимых для достижения 285 млн руб.","type":"hypothesis","confidence":"medium","source_ids":["BRIEF-PDF","ECON-ASSUMPTION"],"exact_location":"PDF раздел «Как рассчитать прибыль и окупаемость»"},
+    {"id":"BRIEF-FORECAST-01","text":"На конец третьего года ориентиром может стать доля подходящих подключённых семейных групп, сохранивших доступ к интернету в назначенном окне.","type":"forecast","confidence":"low","source_ids":["BRIEF-PDF","DEMO-METRICS"],"exact_location":"PDF раздел «План на ближайший год и ориентир на конец третьего года»"}
+  ],
+  "relations": []
+}
