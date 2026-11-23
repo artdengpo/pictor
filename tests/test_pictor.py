@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from pictor.cli import normalize_photo_path
 from pictor.images import generate_output_path, make_slug, restyled_output_path, validate_image
 from pictor.language import detect_language, enhance_prompt, build_restyle_prompt
 from pictor.local_provider import LocalImageProvider
@@ -43,6 +44,15 @@ def test_output_paths_have_timestamp_and_unique_suffix(tmp_path: Path) -> None:
 def test_restyled_output_path(tmp_path: Path) -> None:
     path = restyled_output_path(tmp_path, Path("my-photo.jpg"))
     assert path.name.startswith("restyled_my_photo_")
+
+
+def test_photo_path_accepts_surrounding_quotes(tmp_path: Path) -> None:
+    photo_path = tmp_path / "my photo.jpg"
+    Image.new("RGB", (4, 4), "white").save(photo_path)
+    assert normalize_photo_path(f'"{photo_path}"') == photo_path
+    assert normalize_photo_path(f"'{photo_path}'") == photo_path
+
+    assert validate_image(normalize_photo_path(f'"{photo_path}"')).size == (4, 4)
 
 
 def test_validates_real_image(tmp_path: Path) -> None:

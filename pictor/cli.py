@@ -30,6 +30,15 @@ def read_non_empty(prompt: str) -> str | None:
     return value
 
 
+def normalize_photo_path(value: str) -> Path:
+    """Accept paths pasted with matching surrounding quotes."""
+
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        value = value[1:-1].strip()
+    return Path(value).expanduser()
+
+
 def generate_artwork(client: PictorClient | LocalImageProvider) -> None:
     prompt = read_non_empty("Что нарисовать? ")
     if prompt is None:
@@ -58,7 +67,7 @@ def restyle_photo(client: PictorClient | LocalImageProvider) -> None:
     if path_text is None:
         return
 
-    source = Path(path_text).expanduser()
+    source = normalize_photo_path(path_text)
     try:
         prepared_path, prepared_image = prepare_image(source)
     except FileNotFoundError as exc:
