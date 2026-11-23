@@ -4,6 +4,7 @@ from PIL import Image
 
 from pictor.images import generate_output_path, make_slug, restyled_output_path, validate_image
 from pictor.language import detect_language, enhance_prompt, build_restyle_prompt
+from pictor.local_provider import LocalImageProvider
 
 
 def test_detects_cyrillic() -> None:
@@ -59,3 +60,26 @@ def test_rejects_non_image(tmp_path: Path) -> None:
         assert "не является" in str(exc)
     else:
         raise AssertionError("Expected ValueError")
+
+
+def test_local_provider_returns_cli_compatible_image_response() -> None:
+    class FakeTokenizer:
+        model_max_length = 77
+
+        def __call__(self, prompt, **kwargs):
+            return type("Tokens", (), {"input_ids": [[1, 2, 3]]})()
+
+        def decode(self, tokens, **kwargs):
+            return "flowers"
+
+    class FakePipeline:
+        tokenizer = FakeTokenizer()
+
+        def __call__(self, **kwargs):
+            return type("Result", (), {"images": [Image.new("RGB", (4, 4), "pink")]})()
+
+    provider = LocalImageProvider.__new__(LocalImageProvider)
+    provider.text_pipe = FakePipeline()
+    result = provider.generate("цветы")
+
+    assert result.data.startswith(b"\x89PNG\r\n\x1a\n")

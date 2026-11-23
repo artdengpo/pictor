@@ -13,6 +13,9 @@ class Settings:
     image_model: str
     image_size: str
     output_dir: Path
+    provider: str
+    local_model: str
+    local_device: str
 
 
 def load_settings(project_root: Path | None = None) -> Settings:
@@ -28,4 +31,11 @@ def load_settings(project_root: Path | None = None) -> Settings:
         image_size=os.getenv("PICTOR_IMAGE_SIZE", "1024x1024").strip()
         or "1024x1024",
         output_dir=root / "output",
+        provider=os.getenv("PICTOR_PROVIDER", "local").strip().lower() or "local",
+        local_model=os.getenv(
+            "PICTOR_LOCAL_MODEL", "runwayml/stable-diffusion-v1-5"
+        ).strip()
+        or "runwayml/stable-diffusion-v1-5",
+        local_device=os.getenv("PICTOR_LOCAL_DEVICE", "auto").strip().lower()
+        or "auto",
     )

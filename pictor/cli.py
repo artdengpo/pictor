@@ -10,6 +10,7 @@ from .images import (
     save_png,
 )
 from .language import build_restyle_prompt, enhance_prompt
+from .local_provider import LocalImageProvider
 
 
 def print_menu() -> None:
@@ -29,7 +30,7 @@ def read_non_empty(prompt: str) -> str | None:
     return value
 
 
-def generate_artwork(client: PictorClient) -> None:
+def generate_artwork(client: PictorClient | LocalImageProvider) -> None:
     prompt = read_non_empty("Что нарисовать? ")
     if prompt is None:
         return
@@ -38,18 +39,21 @@ def generate_artwork(client: PictorClient) -> None:
     try:
         enhanced = enhance_prompt(prompt)
         response = client.generate(enhanced)
-        destination = generate_output_path(client.settings.output_dir, prompt)
+        destination = generate_output_path(client.output_dir, prompt)
         saved = save_png(response.data, destination)
         print(f"Готово: {saved}")
     except PictorAPIError as exc:
         print(f"Не удалось: {exc}")
     except OSError:
         print("Не удалось сохранить файл. Проверьте права на запись в папку output.")
-    except Exception:
-        print("Не удалось выполнить генерацию. Повторите попытку с другим описанием.")
+    except Exception as exc:
+        print(
+            "Не удалось выполнить генерацию "
+            f"({type(exc).__name__}): {exc}"
+        )
 
 
-def restyle_photo(client: PictorClient) -> None:
+def restyle_photo(client: PictorClient | LocalImageProvider) -> None:
     path_text = read_non_empty("Укажите путь к фотографии: ")
     if path_text is None:
         return
@@ -77,7 +81,7 @@ def restyle_photo(client: PictorClient) -> None:
     try:
         prompt = build_restyle_prompt(style)
         response = client.restyle(prepared_path, prompt)
-        destination = restyled_output_path(client.settings.output_dir, source)
+        destination = restyled_output_path(client.output_dir, source)
         saved = save_png(response.data, destination)
         print(f"Готово: {saved}")
     except PictorAPIError as exc:
@@ -109,15 +113,23 @@ def main() -> None:
     settings = load_settings()
     settings.output_dir.mkdir(parents=True, exist_ok=True)
 
-    if not settings.openai_api_key:
-        print("Pictor не запущен: не задан API-ключ.")
-        print("Создайте файл .env рядом с проектом и укажите:")
-        print("OPENAI_API_KEY=ваш_ключ")
-        print("Где взять ключ: https://platform.openai.com/api-keys")
-        return
-
     try:
-        client = PictorClient(settings)
+        if settings.provider == "local":
+            print("Используется бесплатная локальная модель.")
+            print("Первый запуск скачает модель; затем работа станет независимой от API.")
+            client: PictorClient | LocalImageProvider = LocalImageProvider(
+                settings.local_model,
+                settings.output_dir,
+                settings.local_device,
+            )
+        elif settings.provider == "openai":
+            client = PictorClient(settings)
+        else:
+            print(
+                "Неизвестный PICTOR_PROVIDER. Используйте local или openai "
+                "в файле .env."
+            )
+            return
     except PictorAPIError as exc:
         print(exc)
         return

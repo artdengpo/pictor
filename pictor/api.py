@@ -30,6 +30,10 @@ class PictorClient:
         self.settings = settings
         self.client = OpenAI(api_key=settings.openai_api_key)
 
+    @property
+    def output_dir(self) -> Path:
+        return self.settings.output_dir
+
     def generate(self, prompt: str) -> ImageResponse:
         try:
             response = self.client.images.generate(

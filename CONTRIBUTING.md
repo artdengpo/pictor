@@ -21,6 +21,10 @@ pip install -r requirements.txt
 pytest
 ```
 
+The local model dependencies require several gigabytes of disk space. The
+first model download is also several gigabytes; use `HF_HOME` to place its
+cache on a drive with enough free space.
+
 ## Style and tests
 
 - Use English names for functions and variables; keep user-facing and Russian comments clear.

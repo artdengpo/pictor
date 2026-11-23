@@ -14,4 +14,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic image validation, preparation, and non-overwriting output names.
 - Russian terminal menu and friendly error handling.
 - Generated-image history with dates and file sizes.
-- Environment-based API key configuration and bilingual documentation.
+- Free, local Stable Diffusion generation by default, with an optional paid API provider.
+- Bilingual documentation and an actual generated-image example.
