@@ -97,8 +97,11 @@ def restyle_photo(client: PictorClient | LocalImageProvider) -> None:
         print(f"Не удалось: {exc}")
     except OSError:
         print("Не удалось сохранить результат. Проверьте права на запись в папку output.")
-    except Exception:
-        print("Не удалось выполнить перерисовку. Проверьте изображение и повторите попытку.")
+    except Exception as exc:
+        print(
+            "Не удалось выполнить перерисовку "
+            f"({type(exc).__name__}): {exc}"
+        )
     finally:
         prepared_image.close()
         prepared_path.unlink(missing_ok=True)

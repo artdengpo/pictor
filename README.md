@@ -154,6 +154,7 @@ requirements.txt    Pinned dependencies
 - `language.py` detects Cyrillic input and leaves future third-language support in a central language registry.
 - `images.py` creates `output/`, prepares local photos, and adds numeric suffixes instead of overwriting.
 - `local_provider.py` runs Stable Diffusion locally; set `HF_HOME` to move its model cache to another drive.
+- Photo restyling uses a low image-to-image strength to reduce changes to people, objects, and layout; results can still differ from the original.
 - `api.py` is only used when the optional paid OpenAI provider is selected.
 - `output/` is ignored by Git. Source photos remain in their original location.
 

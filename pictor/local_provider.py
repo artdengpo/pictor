@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Any
 
 from PIL import Image
 
 from .api import ImageResponse, PictorAPIError
+
+RESTYLE_STRENGTH = 0.25
 
 
 class LocalImageProvider:
@@ -34,7 +35,6 @@ class LocalImageProvider:
             self.text_pipe.to(device)
             self.edit_pipe: StableDiffusionImg2ImgPipeline | None = None
             self.device = device
-            self.model_id = model_id
         except Exception as exc:
             raise PictorAPIError(
                 "Не удалось загрузить локальную модель. Проверьте интернет "
@@ -62,23 +62,20 @@ class LocalImageProvider:
 
             prompt = self._fit_prompt(prompt)
             if self.edit_pipe is None:
-                import torch
-
-                torch_dtype = torch.float16 if self.device == "cuda" else torch.float32
-                self.edit_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-                    self.model_id,
-                    torch_dtype=torch_dtype,
-                    safety_checker=None,
-                )
-                self.edit_pipe.to(self.device)
+                self.edit_pipe = StableDiffusionImg2ImgPipeline.from_pipe(self.text_pipe)
 
             source = Image.open(image_path).convert("RGB")
             source.thumbnail((512, 512), Image.Resampling.LANCZOS)
             result = self.edit_pipe(
                 prompt=prompt,
                 image=source,
-                strength=0.75,
-                guidance_scale=7.5,
+                negative_prompt=(
+                    "different person, changed face, different clothing, replaced "
+                    "objects, extra objects, missing objects, altered pose, "
+                    "different composition, surreal, abstract, distorted"
+                ),
+                strength=RESTYLE_STRENGTH,
+                guidance_scale=5.5,
                 num_inference_steps=20,
             )
             return ImageResponse(data=self._encode_png(result.images[0]))

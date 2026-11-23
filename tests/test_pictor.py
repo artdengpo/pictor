@@ -5,7 +5,7 @@ from PIL import Image
 from pictor.cli import normalize_photo_path
 from pictor.images import generate_output_path, make_slug, restyled_output_path, validate_image
 from pictor.language import detect_language, enhance_prompt, build_restyle_prompt
-from pictor.local_provider import LocalImageProvider
+from pictor.local_provider import LocalImageProvider, RESTYLE_STRENGTH
 
 
 def test_detects_cyrillic() -> None:
@@ -21,8 +21,13 @@ def test_enhances_prompt_in_detected_language() -> None:
 
 
 def test_restyle_prompt_preserves_subject() -> None:
-    assert "узнаваем" in build_restyle_prompt("акварель")
-    assert "recognizable" in build_restyle_prompt("watercolor")
+    russian = build_restyle_prompt("акварель")
+    english = build_restyle_prompt("watercolor")
+    assert "watercolor" in russian
+    assert "exact same person" in russian
+    assert "Do not replace" in english
+    assert len(russian.split()) < 50
+    assert RESTYLE_STRENGTH <= 0.3
 
 
 def test_make_slug_is_safe() -> None:

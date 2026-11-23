@@ -42,20 +42,31 @@ def enhance_prompt(text: str) -> str:
 
 
 def build_restyle_prompt(style_description: str) -> str:
-    """Build a restyling prompt that protects subject recognition."""
+    """Build a concise English style prompt while protecting image content."""
 
-    language = detect_language(style_description)
-    if language == "ru":
-        return (
-            f"Перерисуй фотографию в следующем художественном стиле: {style_description.strip()}. "
-            "Сохрани узнаваемые персонажей, предметы, позу и основной сюжет; "
-            "изменяй технику рисования, текстуры и палитру. Без подписи, водяного знака "
-            "или постороннего текста."
+    style = style_description.strip()
+    if detect_language(style) == "ru":
+        normalized = style.lower()
+        translations = (
+            (("акварел",), "soft watercolor illustration"),
+            (("карандаш", "скетч"), "gentle pencil sketch"),
+            (("аниме",), "subtle anime illustration"),
+            (("маслян", "масля"), "soft oil painting"),
+            (("киберпанк", "неонов"), "subtle neon cyberpunk color grading"),
+            (("ван гог", "вангог"), "subtle post-impressionist brushwork"),
+        )
+        style = next(
+            (
+                english
+                for keywords, english in translations
+                if any(keyword in normalized for keyword in keywords)
+            ),
+            "subtle artistic color and texture treatment",
         )
 
     return (
-        f"Redraw the photograph in this artistic style: {style_description.strip()}. "
-        "Preserve recognizable subjects, objects, pose, and the main composition; "
-        "change the rendering technique, textures, and palette. "
-        "No signature, watermark, or unrelated text."
+        f"Apply {style} to the input photo. Keep the exact same person, face, "
+        "clothing, objects, pose, proportions, and composition. Do not replace, "
+        "add, remove, or reshape anything. Make only a subtle change to the "
+        "rendering texture and colors. Preserve the original photo's details."
     )
