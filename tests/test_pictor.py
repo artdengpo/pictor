@@ -1,16 +1,18 @@
+import io
 from pathlib import Path
+from types import SimpleNamespace
 
 from PIL import Image
 
-from pictor.cli import choose_restyle_style, normalize_photo_path
-from pictor.images import generate_output_path, make_slug, restyled_output_path, validate_image
+from pictor.cli import generate_artwork, print_menu
+from pictor.images import generate_output_path, make_slug
 from pictor.language import (
-    RESTYLE_STYLE_PRESETS,
-    build_restyle_prompt,
+    build_generation_prompt,
     detect_language,
     enhance_prompt,
+    translate_russian_prompt,
 )
-from pictor.local_provider import LocalImageProvider, RESTYLE_STRENGTH
+from pictor.local_provider import LocalImageProvider
 
 
 def test_detects_cyrillic() -> None:
@@ -18,21 +20,49 @@ def test_detects_cyrillic() -> None:
     assert detect_language("a watercolor bouquet") == "en"
 
 
-def test_enhances_prompt_in_detected_language() -> None:
+def test_enhances_prompt_in_english() -> None:
     russian = enhance_prompt("пионы")
     english = enhance_prompt("peonies")
-    assert "Создай" in russian
+    assert "peonies" in russian
     assert "Create" in english
 
 
-def test_restyle_prompt_preserves_subject() -> None:
-    russian = build_restyle_prompt("акварель")
-    english = build_restyle_prompt("watercolor")
-    assert "watercolor" in russian
-    assert "exact same person" in russian
-    assert "Do not replace" in english
-    assert len(russian.split()) < 50
-    assert RESTYLE_STRENGTH <= 0.3
+def test_russian_car_prompt_translates_main_subject() -> None:
+    translated = translate_russian_prompt("Нарисуй красную спортивную машину")
+    assert "car" in translated
+    assert "red" in translated
+    assert "cucumber" not in translated
+
+
+def test_generation_prompt_puts_subject_before_style() -> None:
+    prompt = build_generation_prompt("машину", "watercolor painting")
+    assert prompt.index("car") < prompt.index("Art style")
+    assert "watercolor painting" in prompt
+    assert "unrelated objects" in prompt
+
+
+def test_generate_artwork_uses_translated_subject_and_saves_image(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    class FakeClient:
+        output_dir = tmp_path
+
+        def generate(self, prompt: str):
+            self.prompt = prompt
+            image_buffer = io.BytesIO()
+            Image.new("RGB", (4, 4), "red").save(image_buffer, format="PNG")
+            return SimpleNamespace(data=image_buffer.getvalue())
+
+    answers = iter(("Нарисуй красную машину", "3"))
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+    client = FakeClient()
+
+    generate_artwork(client)
+
+    assert "red car" in client.prompt
+    assert "cucumber" not in client.prompt
+    assert len(list(tmp_path.glob("*.png"))) == 1
+    assert "Картина сохранена" in capsys.readouterr().out
 
 
 def test_make_slug_is_safe() -> None:
@@ -49,48 +79,6 @@ def test_output_paths_have_timestamp_and_unique_suffix(tmp_path: Path) -> None:
     assert first != second
     assert first.name.startswith("20")
     assert second.name.endswith(".png")
-
-
-def test_restyled_output_path(tmp_path: Path) -> None:
-    path = restyled_output_path(tmp_path, Path("my-photo.jpg"))
-    assert path.name.startswith("restyled_my_photo_")
-
-
-def test_photo_path_accepts_surrounding_quotes(tmp_path: Path) -> None:
-    photo_path = tmp_path / "my photo.jpg"
-    Image.new("RGB", (4, 4), "white").save(photo_path)
-    assert normalize_photo_path(f'"{photo_path}"') == photo_path
-    assert normalize_photo_path(f"'{photo_path}'") == photo_path
-
-    assert validate_image(normalize_photo_path(f'"{photo_path}"')).size == (4, 4)
-
-
-def test_restyle_style_menu_returns_selected_prompt(monkeypatch) -> None:
-    monkeypatch.setattr("builtins.input", lambda _: "5")
-    assert choose_restyle_style() == RESTYLE_STYLE_PRESETS["5"][1]
-
-
-def test_restyle_style_menu_supports_custom_description(monkeypatch) -> None:
-    answers = iter(["6", "soft watercolor, keep the exact face"])
-    monkeypatch.setattr("builtins.input", lambda _: next(answers))
-    assert choose_restyle_style() == "soft watercolor, keep the exact face"
-
-
-def test_validates_real_image(tmp_path: Path) -> None:
-    source = tmp_path / "photo.png"
-    Image.new("RGB", (32, 32), "white").save(source)
-    assert validate_image(source).size == (32, 32)
-
-
-def test_rejects_non_image(tmp_path: Path) -> None:
-    source = tmp_path / "not-an-image.txt"
-    source.write_text("hello", encoding="utf-8")
-    try:
-        validate_image(source)
-    except ValueError as exc:
-        assert "не является" in str(exc)
-    else:
-        raise AssertionError("Expected ValueError")
 
 
 def test_local_provider_returns_cli_compatible_image_response() -> None:
@@ -114,3 +102,12 @@ def test_local_provider_returns_cli_compatible_image_response() -> None:
     result = provider.generate("цветы")
 
     assert result.data.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_menu_contains_generation_history_and_exit_only(capsys) -> None:
+    print_menu()
+    menu = capsys.readouterr().out
+    assert "Нарисовать по описанию" in menu
+    assert "История" in menu
+    assert "Выход" in menu
+    assert "Перерисовать" not in menu

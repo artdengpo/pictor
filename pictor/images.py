@@ -1,11 +1,7 @@
 import re
 import unicodedata
-import tempfile
 from datetime import datetime
 from pathlib import Path
-
-from PIL import Image, ImageOps
-
 
 CYRILLIC_TRANSLITERATION = str.maketrans(
     {
@@ -48,58 +44,6 @@ def generate_output_path(output_dir: Path, prompt: str) -> Path:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     stem = f"{timestamp}_{make_slug(prompt)}"
     return unique_output_path(output_dir, stem)
-
-
-def restyled_output_path(output_dir: Path, source_path: Path) -> Path:
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    stem = f"restyled_{make_slug(source_path.stem)}_{timestamp}"
-    return unique_output_path(output_dir, stem)
-
-
-def validate_image(path: Path) -> Image.Image:
-    """Open and verify an image, raising ValueError for invalid files."""
-
-    if not path.exists():
-        raise FileNotFoundError(f"Файл не найден: {path}")
-    if not path.is_file():
-        raise ValueError(f"Это не файл: {path}")
-
-    try:
-        with Image.open(path) as probe:
-            probe.verify()
-        image = Image.open(path)
-        return image
-    except (Image.UnidentifiedImageError, OSError) as exc:
-        raise ValueError(f"Файл не является поддерживаемым изображением: {path}") from exc
-
-
-def prepare_image(path: Path, max_size: int = 2048) -> tuple[Path, Image.Image]:
-    """Correct orientation and normalize a photo for API upload."""
-
-    image = validate_image(path)
-    try:
-        image = ImageOps.exif_transpose(image)
-        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-        if image.mode not in ("RGB", "RGBA"):
-            image = image.convert("RGBA")
-
-        with tempfile.NamedTemporaryFile(prefix="pictor_", suffix=".png", delete=False) as temp:
-            temporary = Path(temp.name)
-
-        if image.mode == "RGBA":
-            background = Image.new("RGB", image.size, "white")
-            background.paste(image, mask=image.getchannel("A"))
-            background.save(temporary, "PNG")
-            image.close()
-            return temporary, Image.open(temporary)
-
-        image.save(temporary, "PNG")
-        image.close()
-        return temporary, Image.open(temporary)
-    except Exception as exc:
-        if "image" in locals():
-            image.close()
-        raise ValueError("Не удалось обработать изображение.") from exc
 
 
 def save_png(response_data: bytes, destination: Path) -> Path:

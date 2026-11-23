@@ -2,22 +2,20 @@ English | [Русский](README.ru.md)
 
 # Pictor
 
-**A personal AI artist that understands Russian and English in your terminal.**
+**A personal AI artist for turning your ideas into images in the terminal.**
 
 ![MIT](https://img.shields.io/badge/license-MIT-green)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
-Pictor turns a text description into an image and restyles photographs in a Russian terminal menu. Its default provider is Stable Diffusion running locally on your computer: there is no per-image API charge, and photos are not sent to an image-generation service.
+Pictor focuses on one thing: turning your text description into an image. Enter a simple idea or describe the subject, art style, colors, lighting, and mood. Its default provider runs Stable Diffusion locally, so there is no per-image API charge.
 
-The model is downloaded once from Hugging Face and cached on disk. After that, generation runs locally and can work offline. A GPU is not required, but CPU generation is slow. English prompts generally work best with this model; Russian input is accepted, though output quality can vary.
+The model is downloaded once from Hugging Face and cached on disk. After that, generation runs locally and can work offline. A GPU is not required, but CPU generation is slow. English prompts generally work best with this model. Pictor locally translates a built-in set of common Russian words (including common subjects such as cars, flowers, and cats); unknown Russian words are left unchanged, so English is still the most reliable choice for unusual descriptions.
 
 ## Features
 
-- Generate images from short or detailed prompts in Russian or English.
-- Restyle a local photo while preserving its recognizable subjects and composition.
-- Pick a ready-made photo-restyling style from a clear Russian menu, or enter your own.
-- Validate image files and normalize orientation, format, and dimensions before local restyling.
+- Generate images from short or detailed prompts in Russian or English, with a choice of five art styles.
+- Preview the English prompt sent to the model before generation.
 - Save results with timestamped, readable filenames and automatic numeric suffixes.
 - Review all generated PNG, JPG, JPEG, and WebP files in the built-in history.
 - Receive friendly Russian status messages and clear model, network, and file errors.
@@ -99,12 +97,13 @@ You will see the Russian menu:
 
 ```text
 1. Нарисовать по описанию
-2. Перерисовать моё фото
-3. История
-4. Выход
+2. История
+3. Выход
 ```
 
-Choose `1` for text-to-image or `2` to restyle a photograph. Pictor prints the saved path when a request succeeds. The first run downloads and loads the model; keep the terminal open.
+Choose `1` to create an image, `2` to see previous results, or `3` to exit. Describe the subject first, then choose oil painting, watercolor, realistic digital painting, anime, pencil drawing, or enter your own style. Check the English prompt preview before generation. Pictor prints the saved path when generation succeeds. The first run downloads and loads the model; keep the terminal open.
+
+The Russian-to-English conversion is a small built-in vocabulary, not a full machine-translation model or online service. For example, `Нарисуй красную спортивную машину` becomes a prompt centered on a `red sports car`; uncommon words remain as entered. No extra download, network request, or translation fee is involved.
 
 ## Prompt examples
 
@@ -112,28 +111,12 @@ Choose `1` for text-to-image or `2` to restyle a photograph. Pictor prints the s
 
 - `пионы акварелью на светлом фоне`
 - `грустный кот под дождём в стиле аниме`
+- `a red sports car on a mountain road`
 - `a bouquet of peonies in soft morning light`
 - `a tiny red cabin beside a snowy mountain, cinematic`
 - `fantasy library, floating candles, watercolor, highly detailed`
 - `тихая улица ночного Токио после дождя`
 - `futuristic greenhouse with glass domes and mist`
-
-**Restyling descriptions:**
-
-When you choose photo restyling, select a preset by number: `1` watercolor, `2` pencil, `3` oil paint, `4` soft illustration, or `5` subtle color changes only. Choose `6` to enter your own style.
-
-- `акварель`
-- `карандашный рисунок`
-- `аниме`
-- `масляная живопись`
-- `неоновый киберпанк`
-- `как у Ван Гога`
-- `watercolor`
-- `pencil sketch`
-- `anime style`
-- `oil painting`
-- `neon cyberpunk`
-- `Vincent van Gogh style`
 
 ## How it works
 
@@ -144,9 +127,9 @@ pictor/
   cli.py            Russian menu and user flow
   config.py         Environment and .env configuration
   language.py       Language detection and prompt enrichment
-  images.py         Validation, normalization, naming, and history
+  images.py         Output naming and history
   api.py            Optional OpenAI API calls and safe error mapping
-  local_provider.py Local Stable Diffusion generation and restyling
+  local_provider.py Local Stable Diffusion text-to-image generation
 output/             Generated PNG files
 docs/screenshots/   Shared README screenshots
 .env.example        Secret configuration template
@@ -154,12 +137,11 @@ requirements.txt    Pinned dependencies
 ```
 
 - `config.py` loads `.env` only from the project root and never prints secrets.
-- `language.py` detects Cyrillic input and leaves future third-language support in a central language registry.
-- `images.py` creates `output/`, prepares local photos, and adds numeric suffixes instead of overwriting.
-- `local_provider.py` runs Stable Diffusion locally; set `HF_HOME` to move its model cache to another drive.
-- Photo restyling uses a low image-to-image strength to reduce changes to people, objects, and layout; results can still differ from the original.
+- `language.py` detects Cyrillic input and translates common Russian prompt words locally; the English prompt is shown before generation.
+- `images.py` creates `output/` and adds numeric suffixes instead of overwriting.
+- `local_provider.py` runs text-to-image generation locally; set `HF_HOME` to move its model cache to another drive.
 - `api.py` is only used when the optional paid OpenAI provider is selected.
-- `output/` is ignored by Git. Source photos remain in their original location.
+- `output/` is ignored by Git; generated images stay on your computer.
 
 ## Cost
 
@@ -169,16 +151,15 @@ The default local mode has no per-image API fee. It uses your computer's hardwar
 
 - The first local launch requires internet to download the model; later generation can run offline.
 - CPU-only generation is slow and uses substantial memory; a compatible GPU is recommended.
-- Russian text is accepted, but this Stable Diffusion model usually follows English prompts more reliably.
-- It does not guarantee a perfect match to the prompt or photographic details.
-- A style request may not preserve every detail. Check the model license before commercial use.
+- Common Russian words are translated locally, but this is not a full translator; uncommon Russian words may remain untranslated. English prompts are more reliable.
+- Results do not always match every detail in a prompt. Check the model license before commercial use.
 
 ## Future plans
 
 - Add a lightweight web interface.
 - Add a third input language through `SUPPORTED_LANGUAGES`.
 - Add a batch-generation mode.
-- Add optional automatic prompt translation and style presets.
+- Expand the built-in Russian prompt vocabulary based on user feedback.
 
 ## Contributing
 

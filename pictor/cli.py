@@ -1,25 +1,48 @@
-from pathlib import Path
+import sys
 
 from .api import PictorAPIError, PictorClient
 from .config import load_settings
 from .images import (
     generate_output_path,
     list_output_files,
-    prepare_image,
-    restyled_output_path,
     save_png,
 )
-from .language import RESTYLE_STYLE_PRESETS, build_restyle_prompt, enhance_prompt
+from .language import ART_STYLES, build_generation_prompt
 from .local_provider import LocalImageProvider
 
 
+def _styled(text: str, color: str) -> str:
+    if not sys.stdout.isatty():
+        return text
+    return f"\033[{color}m{text}\033[0m"
+
+
 def print_menu() -> None:
-    print("\n================ Pictor ================")
-    print("1. Нарисовать по описанию")
-    print("2. Перерисовать моё фото")
-    print("3. История")
-    print("4. Выход")
-    print("========================================")
+    print()
+    print(_styled("╭──────────────────────────────────────────╮", "36"))
+    print(_styled("│            P I C T O R                   │", "35"))
+    print(_styled("│       Ваша идея — ваша картина           │", "36"))
+    print(_styled("├──────────────────────────────────────────┤", "36"))
+    print("│  1. Нарисовать по описанию                │")
+    print("│  2. История                               │")
+    print("│  3. Выход                                 │")
+    print(_styled("╰──────────────────────────────────────────╯", "36"))
+
+
+def choose_art_style() -> str | None:
+    print("\nВыберите стиль:")
+    for number, (label, _) in ART_STYLES.items():
+        print(f"  {number}. {label}")
+    print("  6. Свой стиль")
+
+    choice = input("Стиль [1–6]: ").strip()
+    if choice in ART_STYLES:
+        return ART_STYLES[choice][1]
+    if choice == "6":
+        return read_non_empty("Опишите стиль на русском или английском: ")
+
+    print("Такого стиля нет. Выберите число от 1 до 6.")
+    return None
 
 
 def read_non_empty(prompt: str) -> str | None:
@@ -30,100 +53,39 @@ def read_non_empty(prompt: str) -> str | None:
     return value
 
 
-def normalize_photo_path(value: str) -> Path:
-    """Accept paths pasted with matching surrounding quotes."""
-
-    value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
-        value = value[1:-1].strip()
-    return Path(value).expanduser()
-
-
-def choose_restyle_style() -> str | None:
-    print("\nВыберите, как изменить фото:")
-    for number, (label, _) in RESTYLE_STYLE_PRESETS.items():
-        print(f"{number}. {label}")
-    print("6. Свой вариант")
-    print("Совет: для максимального сходства выберите пункт 5.")
-
-    while True:
-        choice = input("Стиль (1–6): ").strip()
-        if choice in RESTYLE_STYLE_PRESETS:
-            return RESTYLE_STYLE_PRESETS[choice][1]
-        if choice == "6":
-            return read_non_empty(
-                "Опишите стиль коротко (например: мягкая акварель, "
-                "не меняй лицо и одежду): "
-            )
-        print("Введите число от 1 до 6.")
-
-
 def generate_artwork(client: PictorClient | LocalImageProvider) -> None:
-    prompt = read_non_empty("Что нарисовать? ")
-    if prompt is None:
+    subject = read_non_empty(
+        "Что нарисовать? Сначала назовите главный объект (например: машина, букет пионов): "
+    )
+    if subject is None:
         return
 
-    print("Генерирую изображение…")
-    try:
-        enhanced = enhance_prompt(prompt)
-        response = client.generate(enhanced)
-        destination = generate_output_path(client.output_dir, prompt)
-        saved = save_png(response.data, destination)
-        print(f"Готово: {saved}")
-    except PictorAPIError as exc:
-        print(f"Не удалось: {exc}")
-    except OSError:
-        print("Не удалось сохранить файл. Проверьте права на запись в папку output.")
-    except Exception as exc:
-        print(
-            "Не удалось выполнить генерацию "
-            f"({type(exc).__name__}): {exc}"
-        )
-
-
-def restyle_photo(client: PictorClient | LocalImageProvider) -> None:
-    path_text = read_non_empty("Укажите путь к фотографии: ")
-    if path_text is None:
-        return
-
-    source = normalize_photo_path(path_text)
-    try:
-        prepared_path, prepared_image = prepare_image(source)
-    except FileNotFoundError as exc:
-        print(f"Не удалось: {exc}. Проверьте путь и попробуйте ещё раз.")
-        return
-    except ValueError as exc:
-        print(f"Не удалось: {exc}")
-        return
-    except Exception:
-        print("Не удалось открыть файл изображения.")
-        return
-
-    style = choose_restyle_style()
+    style = choose_art_style()
     if style is None:
-        prepared_image.close()
-        prepared_path.unlink(missing_ok=True)
         return
 
-    print("Перерисовываю фотографию…")
+    prompt = build_generation_prompt(subject, style)
+    print(_styled(f"\nПромт модели: {prompt}", "36"))
+    print(_styled("Генерирую изображение. На CPU это может занять несколько минут…", "33"))
     try:
-        prompt = build_restyle_prompt(style)
-        response = client.restyle(prepared_path, prompt)
-        destination = restyled_output_path(client.output_dir, source)
+        response = client.generate(prompt)
+        destination = generate_output_path(client.output_dir, subject)
         saved = save_png(response.data, destination)
-        print(f"Готово: {saved}")
+        print(_styled(f"Готово! Картина сохранена: {saved}", "32"))
     except PictorAPIError as exc:
-        print(f"Не удалось: {exc}")
+        print(_styled(f"Не удалось создать картину: {exc}", "31"))
     except OSError:
-        print("Не удалось сохранить результат. Проверьте права на запись в папку output.")
+        print(_styled(
+            "Не удалось сохранить файл. Проверьте права на запись в папку output.",
+            "31",
+        ))
     except Exception as exc:
         print(
-            "Не удалось выполнить перерисовку "
-            f"({type(exc).__name__}): {exc}"
+            _styled(
+                f"Не удалось выполнить генерацию ({type(exc).__name__}): {exc}",
+                "31",
+            )
         )
-    finally:
-        prepared_image.close()
-        prepared_path.unlink(missing_ok=True)
 
 
 def show_history() -> None:
@@ -131,7 +93,7 @@ def show_history() -> None:
     records = list_output_files(settings.output_dir)
     print("\nИстория сгенерированных изображений:")
     if not records:
-        print("Пока нет файлов. Сначала нарисуйте картинку или перерисуйте фото.")
+        print("Пока нет картин. Сначала нарисуйте что-нибудь по описанию.")
         return
 
     for path, modified, size in records:
@@ -146,7 +108,7 @@ def main() -> None:
 
     try:
         if settings.provider == "local":
-            print("Используется бесплатная локальная модель.")
+            print(_styled("Pictor работает на бесплатной локальной модели.", "32"))
             print("Первый запуск скачает модель; затем работа станет независимой от API.")
             client: PictorClient | LocalImageProvider = LocalImageProvider(
                 settings.local_model,
@@ -171,11 +133,9 @@ def main() -> None:
         if choice == "1":
             generate_artwork(client)
         elif choice == "2":
-            restyle_photo(client)
-        elif choice == "3":
             show_history()
-        elif choice == "4":
+        elif choice == "3":
             print("До встречи!")
             return
         else:
-            print("Такого пункта нет. Введите число от 1 до 4.")
+            print("Такого пункта нет. Введите число от 1 до 3.")

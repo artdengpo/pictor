@@ -45,19 +45,6 @@ class PictorClient:
         except Exception as exc:
             raise self._translate_error(exc) from exc
 
-    def restyle(self, image_path: Path, prompt: str) -> ImageResponse:
-        try:
-            with image_path.open("rb") as image_file:
-                response = self.client.images.edit(
-                    model=self.settings.image_model,
-                    image=image_file,
-                    prompt=prompt,
-                    size=self.settings.image_size,
-                )
-            return ImageResponse(data=self._extract_image(response))
-        except Exception as exc:
-            raise self._translate_error(exc) from exc
-
     @staticmethod
     def _extract_image(response: Any) -> bytes:
         if not getattr(response, "data", None):

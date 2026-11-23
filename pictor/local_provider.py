@@ -4,16 +4,13 @@ from PIL import Image
 
 from .api import ImageResponse, PictorAPIError
 
-RESTYLE_STRENGTH = 0.25
-
 
 class LocalImageProvider:
-    """Generate and restyle images locally with Hugging Face Diffusers."""
+    """Generate images locally with Hugging Face Diffusers."""
 
     def __init__(self, model_id: str, output_dir: Path, device: str = "auto"):
         try:
             import torch
-            from diffusers import StableDiffusionImg2ImgPipeline
             from diffusers import StableDiffusionPipeline
         except ImportError as exc:
             raise PictorAPIError(
@@ -33,7 +30,6 @@ class LocalImageProvider:
                 safety_checker=None,
             )
             self.text_pipe.to(device)
-            self.edit_pipe: StableDiffusionImg2ImgPipeline | None = None
             self.device = device
         except Exception as exc:
             raise PictorAPIError(
@@ -53,35 +49,6 @@ class LocalImageProvider:
         except Exception as exc:
             raise PictorAPIError(
                 f"Локальная генерация завершилась с ошибкой "
-                f"({type(exc).__name__}): {exc}"
-            ) from exc
-
-    def restyle(self, image_path: Path, prompt: str) -> ImageResponse:
-        try:
-            from diffusers import StableDiffusionImg2ImgPipeline
-
-            prompt = self._fit_prompt(prompt)
-            if self.edit_pipe is None:
-                self.edit_pipe = StableDiffusionImg2ImgPipeline.from_pipe(self.text_pipe)
-
-            source = Image.open(image_path).convert("RGB")
-            source.thumbnail((512, 512), Image.Resampling.LANCZOS)
-            result = self.edit_pipe(
-                prompt=prompt,
-                image=source,
-                negative_prompt=(
-                    "different person, changed face, different clothing, replaced "
-                    "objects, extra objects, missing objects, altered pose, "
-                    "different composition, surreal, abstract, distorted"
-                ),
-                strength=RESTYLE_STRENGTH,
-                guidance_scale=5.5,
-                num_inference_steps=20,
-            )
-            return ImageResponse(data=self._encode_png(result.images[0]))
-        except Exception as exc:
-            raise PictorAPIError(
-                f"Локальная перерисовка завершилась с ошибкой "
                 f"({type(exc).__name__}): {exc}"
             ) from exc
 

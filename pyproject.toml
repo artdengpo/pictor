@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pictor"
 version = "0.1.0"
-description = "A free local AI artist for Russian and English prompts"
+description = "A free local text-to-image AI artist with Russian prompt vocabulary"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
   "openai==1.109.1",
   "Pillow==11.3.0",
