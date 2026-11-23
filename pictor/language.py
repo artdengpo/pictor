@@ -6,6 +6,14 @@ SUPPORTED_LANGUAGES: Final[dict[str, str]] = {
     "en": "English",
 }
 
+RESTYLE_STYLE_PRESETS: Final[dict[str, tuple[str, str]]] = {
+    "1": ("Нежная акварель", "soft watercolor texture, subtle color wash"),
+    "2": ("Карандашный рисунок", "light pencil texture, preserve photo colors"),
+    "3": ("Масляная живопись", "subtle oil-paint texture, restrained brush strokes"),
+    "4": ("Мягкая иллюстрация", "soft illustrated finish, preserve realistic details"),
+    "5": ("Только немного изменить цвета", "subtle color grading only"),
+}
+
 
 def detect_language(text: str) -> str:
     """Return the detected language code; Russian has Cyrillic priority."""

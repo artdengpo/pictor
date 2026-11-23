@@ -2,9 +2,14 @@ from pathlib import Path
 
 from PIL import Image
 
-from pictor.cli import normalize_photo_path
+from pictor.cli import choose_restyle_style, normalize_photo_path
 from pictor.images import generate_output_path, make_slug, restyled_output_path, validate_image
-from pictor.language import detect_language, enhance_prompt, build_restyle_prompt
+from pictor.language import (
+    RESTYLE_STYLE_PRESETS,
+    build_restyle_prompt,
+    detect_language,
+    enhance_prompt,
+)
 from pictor.local_provider import LocalImageProvider, RESTYLE_STRENGTH
 
 
@@ -58,6 +63,17 @@ def test_photo_path_accepts_surrounding_quotes(tmp_path: Path) -> None:
     assert normalize_photo_path(f"'{photo_path}'") == photo_path
 
     assert validate_image(normalize_photo_path(f'"{photo_path}"')).size == (4, 4)
+
+
+def test_restyle_style_menu_returns_selected_prompt(monkeypatch) -> None:
+    monkeypatch.setattr("builtins.input", lambda _: "5")
+    assert choose_restyle_style() == RESTYLE_STYLE_PRESETS["5"][1]
+
+
+def test_restyle_style_menu_supports_custom_description(monkeypatch) -> None:
+    answers = iter(["6", "soft watercolor, keep the exact face"])
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+    assert choose_restyle_style() == "soft watercolor, keep the exact face"
 
 
 def test_validates_real_image(tmp_path: Path) -> None:

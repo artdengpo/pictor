@@ -16,6 +16,7 @@ The model is downloaded once from Hugging Face and cached on disk. After that, g
 
 - Generate images from short or detailed prompts in Russian or English.
 - Restyle a local photo while preserving its recognizable subjects and composition.
+- Pick a ready-made photo-restyling style from a clear Russian menu, or enter your own.
 - Validate image files and normalize orientation, format, and dimensions before local restyling.
 - Save results with timestamped, readable filenames and automatic numeric suffixes.
 - Review all generated PNG, JPG, JPEG, and WebP files in the built-in history.
@@ -118,6 +119,8 @@ Choose `1` for text-to-image or `2` to restyle a photograph. Pictor prints the s
 - `futuristic greenhouse with glass domes and mist`
 
 **Restyling descriptions:**
+
+When you choose photo restyling, select a preset by number: `1` watercolor, `2` pencil, `3` oil paint, `4` soft illustration, or `5` subtle color changes only. Choose `6` to enter your own style.
 
 - `акварель`
 - `карандашный рисунок`

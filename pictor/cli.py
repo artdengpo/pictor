@@ -9,7 +9,7 @@ from .images import (
     restyled_output_path,
     save_png,
 )
-from .language import build_restyle_prompt, enhance_prompt
+from .language import RESTYLE_STYLE_PRESETS, build_restyle_prompt, enhance_prompt
 from .local_provider import LocalImageProvider
 
 
@@ -37,6 +37,25 @@ def normalize_photo_path(value: str) -> Path:
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
         value = value[1:-1].strip()
     return Path(value).expanduser()
+
+
+def choose_restyle_style() -> str | None:
+    print("\nВыберите, как изменить фото:")
+    for number, (label, _) in RESTYLE_STYLE_PRESETS.items():
+        print(f"{number}. {label}")
+    print("6. Свой вариант")
+    print("Совет: для максимального сходства выберите пункт 5.")
+
+    while True:
+        choice = input("Стиль (1–6): ").strip()
+        if choice in RESTYLE_STYLE_PRESETS:
+            return RESTYLE_STYLE_PRESETS[choice][1]
+        if choice == "6":
+            return read_non_empty(
+                "Опишите стиль коротко (например: мягкая акварель, "
+                "не меняй лицо и одежду): "
+            )
+        print("Введите число от 1 до 6.")
 
 
 def generate_artwork(client: PictorClient | LocalImageProvider) -> None:
@@ -80,7 +99,7 @@ def restyle_photo(client: PictorClient | LocalImageProvider) -> None:
         print("Не удалось открыть файл изображения.")
         return
 
-    style = read_non_empty("Опишите желаемый стиль: ")
+    style = choose_restyle_style()
     if style is None:
         prepared_image.close()
         prepared_path.unlink(missing_ok=True)
