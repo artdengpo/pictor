@@ -2,7 +2,7 @@ English | [Русский](README.ru.md)
 
 # Pictor
 
-**A personal AI artist for turning your ideas into images in the terminal.**
+**A personal AI artist that turns your ideas into images in a desktop app.**
 
 ![MIT](https://img.shields.io/badge/license-MIT-green)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
@@ -19,7 +19,7 @@ The model is downloaded once from Hugging Face and cached on disk. After that, g
 - Save results with timestamped, readable filenames and automatic numeric suffixes.
 - Review all generated PNG, JPG, JPEG, and WebP files in the built-in history.
 - Receive friendly Russian status messages and clear model, network, and file errors.
-- Return to the menu after every operation; Pictor never leaves a traceable secret in a message or log.
+- Get friendly Russian status messages and clear errors in the desktop app.
 
 ## Screenshots
 
@@ -93,15 +93,13 @@ PICTOR_LOCAL_DEVICE=auto
 python -m pictor
 ```
 
-You will see the Russian menu:
+Pictor opens a desktop window where you can describe an image, choose an art style, preview the prompt, generate an image, and browse your gallery. The first run downloads and loads the model; keep the window open. On CPU, generation can take several minutes.
 
-```text
-1. Нарисовать по описанию
-2. История
-3. Выход
+To use the original terminal menu instead, run:
+
+```bash
+python -m pictor.cli
 ```
-
-Choose `1` to create an image, `2` to see previous results, or `3` to exit. Describe the subject first, then choose oil painting, watercolor, realistic digital painting, anime, pencil drawing, or enter your own style. Check the English prompt preview before generation. Pictor prints the saved path when generation succeeds. The first run downloads and loads the model; keep the terminal open.
 
 The Russian-to-English conversion is a small built-in vocabulary, not a full machine-translation model or online service. For example, `Нарисуй красную спортивную машину` becomes a prompt centered on a `red sports car`; uncommon words remain as entered. No extra download, network request, or translation fee is involved.
 
@@ -123,8 +121,9 @@ The Russian-to-English conversion is a small built-in vocabulary, not a full mac
 ```text
 pictor/
   __init__.py       Package metadata
-  __main__.py       python -m pictor entry point
-  cli.py            Russian menu and user flow
+  __main__.py       Desktop app entry point
+  gui.py            Desktop interface, gallery, and image preview
+  cli.py            Optional terminal interface
   config.py         Environment and .env configuration
   language.py       Language detection and prompt enrichment
   images.py         Output naming and history

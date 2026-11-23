@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A desktop interface with an image preview and generated-image gallery.
 - Five built-in art styles and a preview of the prompt sent to the model.
 - Local translation of common Russian prompt words into English.
 

@@ -20,7 +20,8 @@ dependencies = [
 ]
 
 [project.scripts]
-pictor = "pictor.cli:main"
+pictor = "pictor.gui:main"
+pictor-cli = "pictor.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
